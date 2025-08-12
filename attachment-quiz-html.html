@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Estilos de Apego</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b, #581c87, #be185d);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 32rem;
+            width: 100%;
+        }
+
+        .screen {
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.5s ease;
+        }
+
+        .screen.animating {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .screen.hidden {
+            display: none;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            text-align: center;
+        }
+
+        .title-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .title-blur {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            opacity: 0.3;
+            border-radius: 50%;
+            filter: blur(3rem);
+        }
+
+        .title {
+            position: relative;
+            font-size: 3.75rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .title-gradient {
+            background: linear-gradient(90deg, #f472b6, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+        }
+
+        .description {
+            font-size: 1.25rem;
+            color: #d1d5db;
+            max-width: 24rem;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .start-btn, .restart-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 1.125rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .start-btn:hover, .restart-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-blur {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            filter: blur(1rem);
+        }
+
+        .start-btn:hover .btn-blur, .restart-btn:hover .btn-blur {
+            opacity: 0.2;
+        }
+
+        .chevron {
+            width: 1.25rem;
+            height: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .start-btn:hover .chevron, .restart-btn:hover .chevron {
+            transform: translateX(0.25rem);
+        }
+
+        /* Quiz Screen */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .progress-segment {
+            height: 0.5rem;
+            border-radius: 9999px;
+            transition: all 0.5s ease;
+        }
+
+        .progress-segment.completed {
+            width: 3rem;
+            background: linear-gradient(90deg, #f472b6, #a78bfa);
+        }
+
+        .progress-segment.current {
+            width: 4rem;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .progress-segment.upcoming {
+            width: 2rem;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.125rem;
+            line-height: 1.6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Result Screen */
+        .result-screen {
+            text-align: center;
+        }
+
+        .result-icon {
+            display: inline-flex;
+            padding: 1.5rem;
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .result-icon.secure {
+            background: linear-gradient(135deg, #fb7185, #e11d48);
+        }
+
+        .result-icon.anxious {
+            background: linear-gradient(135deg, #fbbf24, #ea580c);
+        }
+
+        .result-icon.avoidant {
+            background: linear-gradient(135deg, #34d399, #059669);
+        }
+
+        .result-icon.fearful {
+            background: linear-gradient(135deg, #a78bfa, #6366f1);
+        }
+
+        .result-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .result-description {
+            font-size: 1.25rem;
+            color: #d1d5db;
+            max-width: 28rem;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .traits-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .trait-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+        }
+
+        .growth-text {
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        /* Icons */
+        .icon {
+            width: 3rem;
+            height: 3rem;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .question-text {
+                font-size: 1.25rem;
+            }
+            
+            .result-title {
+                font-size: 2.25rem;
+            }
+            
+            .traits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen welcome-screen">
+            <div class="title-container">
+                <div class="title-blur"></div>
+                <h1 class="title">
+                    Descubre Tu
+                    <span class="title-gradient">Estilo de Apego</span>
+                </h1>
+            </div>
+            
+            <p class="description">
+                Entender cómo te conectas con otros puede transformar tus relaciones y profundizar tu autoconocimiento
+            </p>
+            
+            <button class="start-btn" onclick="startQuiz()">
+                <span>Comienza Tu Viaje</span>
+                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <div class="btn-blur"></div>
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen hidden">
+            <div class="quiz-header">
+                <div class="progress-bar" id="progress-bar"></div>
+                <span class="progress-text">
+                    <span id="current-question">1</span> de <span id="total-questions">6</span>
+                </span>
+            </div>
+
+            <div class="question-card">
+                <h2 class="question-text" id="question-text"></h2>
+                <div class="options" id="options"></div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen hidden">
+            <div id="result-icon" class="result-icon">
+                <svg class="icon" id="result-svg" fill="currentColor" viewBox="0 0 24 24"></svg>
+            </div>
+            
+            <h2 class="result-title" id="result-title"></h2>
+            <p class="result-description" id="result-description"></p>
+
+            <div class="result-card">
+                <div>
+                    <h3 class="section-title">Tus Fortalezas</h3>
+                    <div class="traits-grid" id="traits-grid"></div>
+                </div>
+
+                <div>
+                    <h3 class="section-title">Camino de Crecimiento</h3>
+                    <p class="growth-text" id="growth-text"></p>
+                </div>
+            </div>
+
+            <button class="restart-btn" onclick="restart()">
+                <span>Tomar Quiz Nuevamente</span>
+                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <div class="btn-blur"></div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let answers = [];
+        let isAnimating = false;
+
+        const questions = [
+            {
+                text: "Cuando alguien que me importa se aleja, tiendo a...",
+                options: [
+                    { text: "Darles espacio mientras me mantengo disponible", score: { secure: 3, anxious: 0, avoidant: 1, fearful: 1 } },
+                    { text: "Preocuparme de que estén perdiendo interés en mí", score: { secure: 0, anxious: 3, avoidant: 0, fearful: 2 } },
+                    { text: "Enfocarme en otras cosas de mi vida", score: { secure: 1, anxious: 0, avoidant: 3, fearful: 1 } },
+                    { text: "Sentirme confundido y alejarme yo mismo", score: { secure: 0, anxious: 1, avoidant: 1, fearful: 3 } }
+                ]
+            },
+            {
+                text: "En las relaciones, me resulta más fácil...",
+                options: [
+                    { text: "Compartir mis sentimientos abierta y honestamente", score: { secure: 3, anxious: 1, avoidant: 0, fearful: 0 } },
+                    { text: "Expresar mis necesidades, aunque se sienta vulnerable", score: { secure: 2, anxious: 3, avoidant: 0, fearful: 1 } },
+                    { text: "Mantener algunas partes de mí mismo privadas", score: { secure: 0, anxious: 0, avoidant: 3, fearful: 2 } },
+                    { text: "Luchar entre querer cercanía e independencia", score: { secure: 0, anxious: 1, avoidant: 1, fearful: 3 } }
+                ]
+            },
+            {
+                text: "Cuando se trata de depender de otros, yo...",
+                options: [
+                    { text: "Me siento cómodo pidiendo ayuda cuando la necesito", score: { secure: 3, anxious: 1, avoidant: 0, fearful: 0 } },
+                    { text: "A menudo busco tranquilidad de aquellos cercanos a mí", score: { secure: 0, anxious: 3, avoidant: 0, fearful: 1 } },
+                    { text: "Prefiero manejar las cosas por mi cuenta", score: { secure: 0, anxious: 0, avoidant: 3, fearful: 1 } },
+                    { text: "Quiero apoyo pero temo ser una carga", score: { secure: 1, anxious: 1, avoidant: 1, fearful: 3 } }
+                ]
+            },
+            {
+                text: "Mi dinámica de relación ideal involucra...",
+                options: [
+                    { text: "Equilibrio entre estar juntos e independencia", score: { secure: 3, anxious: 0, avoidant: 1, fearful: 0 } },
+                    { text: "Mucho tiempo de calidad y cercanía emocional", score: { secure: 1, anxious: 3, avoidant: 0, fearful: 1 } },
+                    { text: "Mantener mi autonomía y espacio personal", score: { secure: 1, anxious: 0, avoidant: 3, fearful: 1 } },
+                    { text: "Encontrar a alguien que entienda mi complejidad", score: { secure: 0, anxious: 1, avoidant: 0, fearful: 3 } }
+                ]
+            },
+            {
+                text: "Cuando surgen conflictos en las relaciones, típicamente...",
+                options: [
+                    { text: "Los abordo con calma y trabajo hacia la resolución", score: { secure: 3, anxious: 0, avoidant: 0, fearful: 0 } },
+                    { text: "Me siento ansioso hasta que hayamos hablado", score: { secure: 0, anxious: 3, avoidant: 0, fearful: 1 } },
+                    { text: "Necesito tiempo a solas antes de discutir", score: { secure: 1, anxious: 0, avoidant: 3, fearful: 1 } },
+                    { text: "Me siento abrumado e inseguro de cómo responder", score: { secure: 0, anxious: 1, avoidant: 0, fearful: 3 } }
+                ]
+            },
+            {
+                text: "La confianza en las relaciones viene...",
+                options: [
+                    { text: "Naturalmente mientras conozco a alguien", score: { secure: 3, anxious: 0, avoidant: 1, fearful: 0 } },
+                    { text: "Con constante tranquilidad y validación", score: { secure: 0, anxious: 3, avoidant: 0, fearful: 1 } },
+                    { text: "Lentamente, y mantengo un escepticismo saludable", score: { secure: 1, anxious: 0, avoidant: 3, fearful: 1 } },
+                    { text: "En ondas - a veces fácilmente, a veces para nada", score: { secure: 0, anxious: 1, avoidant: 0, fearful: 3 } }
+                ]
+            }
+        ];
+
+        const attachmentStyles = {
+            secure: {
+                title: "Apego Seguro",
+                icon: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+                color: "secure",
+                description: "Tienes un enfoque saludable y equilibrado hacia las relaciones. Te sientes cómodo con la intimidad e independencia, puedes comunicar efectivamente tus necesidades, y la confianza te viene naturalmente.",
+                traits: ["Emocionalmente disponible", "Bueno estableciendo límites", "Cómodo con la intimidad", "Comunicador efectivo"],
+                growth: "Tu base segura te permite formar conexiones profundas y significativas. Continúa nutriendo tus relaciones con comunicación abierta y empatía."
+            },
+            anxious: {
+                title: "Apego Ansioso",
+                icon: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+                color: "anxious",
+                description: "Valoras profundamente las relaciones cercanas y a veces puedes preocuparte por los sentimientos de tu pareja hacia ti. Tienes un gran corazón y capacidad para conexión emocional profunda.",
+                traits: ["Altamente empático", "Valora la cercanía emocional", "Intuitivo sobre los sentimientos de otros", "Apasionado y cariñoso"],
+                growth: "Practica técnicas de auto-tranquilización y construye tu sentido de autoestima independiente de las relaciones. Tu sensibilidad es una fortaleza cuando se equilibra con auto-seguridad."
+            },
+            avoidant: {
+                title: "Apego Evitativo",
+                icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+                color: "avoidant",
+                description: "Valoras tu independencia y autosuficiencia. Aunque puedes formar relaciones, prefieres mantener cierta distancia emocional y espacio personal.",
+                traits: ["Autosuficiente", "Pensador independiente", "Límites fuertes", "Valora el crecimiento personal"],
+                growth: "Desafíate a compartir momentos vulnerables con personas de confianza. Tu independencia es valiosa, y combinarla con apertura emocional puede profundizar tus conexiones."
+            },
+            fearful: {
+                title: "Apego Temeroso-Evitativo",
+                icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/>',
+                color: "fearful",
+                description: "Experimentas una mezcla compleja de querer relaciones cercanas mientras también temes la vulnerabilidad. Esto crea una profundidad única y comprensión de la complejidad humana.",
+                traits: ["Profundamente introspectivo", "Altamente perceptivo", "Rango emocional complejo", "Resiliente"],
+                growth: "Practica la autocompasión y vulnerabilidad gradual con personas seguras. Tu habilidad para ver múltiples perspectivas es un regalo que puede llevar a conexiones profundas."
+            }
+        };
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.innerHTML = '';
+            
+            for (let i = 0; i < questions.length; i++) {
+                const segment = document.createElement('div');
+                segment.className = 'progress-segment';
+                
+                if (i < currentQuestion) {
+                    segment.classList.add('completed');
+                } else if (i === currentQuestion) {
+                    segment.classList.add('current');
+                } else {
+                    segment.classList.add('upcoming');
+                }
+                
+                progressBar.appendChild(segment);
+            }
+        }
+
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('question-text').textContent = question.text;
+            document.getElementById('current-question').textContent = currentQuestion + 1;
+            document.getElementById('total-questions').textContent = questions.length;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option.text;
+                button.onclick = () => handleAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+            
+            updateProgressBar();
+        }
+
+        function handleAnswer(option) {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            const screen = document.getElementById('quiz-screen');
+            screen.classList.add('animating');
+            
+            answers.push(option);
+            
+            setTimeout(() => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    displayQuestion();
+                } else {
+                    const result = calculateResult();
+                    showResult(result);
+                    showScreen('result-screen');
+                }
+                
+                screen.classList.remove('animating');
+                isAnimating = false;
+            }, 300);
+        }
+
+        function calculateResult() {
+            const scores = { secure: 0, anxious: 0, avoidant: 0, fearful: 0 };
+            
+            answers.forEach(answer => {
+                Object.keys(scores).forEach(style => {
+                    scores[style] += answer.score[style];
+                });
+            });
+
+            const maxScore = Math.max(...Object.values(scores));
+            return Object.keys(scores).find(key => scores[key] === maxScore);
+        }
+
+        function showResult(resultType) {
+            const result = attachmentStyles[resultType];
+            
+            const icon = document.getElementById('result-icon');
+            icon.className = `result-icon ${result.color}`;
+            
+            const svg = document.getElementById('result-svg');
+            svg.innerHTML = result.icon;
+            
+            document.getElementById('result-title').textContent = result.title;
+            document.getElementById('result-description').textContent = result.description;
+            
+            const traitsGrid = document.getElementById('traits-grid');
+            traitsGrid.innerHTML = '';
+            result.traits.forEach(trait => {
+                const traitItem = document.createElement('div');
+                traitItem.className = 'trait-item';
+                traitItem.textContent = trait;
+                traitsGrid.appendChild(traitItem);
+            });
+            
+            document.getElementById('growth-text').textContent = result.growth;
+        }
+
+        function showScreen(screenId) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                screen.classList.add('hidden');
+                screen.classList.remove('animating');
+            });
+            
+            setTimeout(() => {
+                document.getElementById(screenId).classList.remove('hidden');
+            }, 100);
+        }
+
+        function startQuiz() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            const screen = document.getElementById('welcome-screen');
+            screen.classList.add('animating');
+            
+            setTimeout(() => {
+                showScreen('quiz-screen');
+                displayQuestion();
+                isAnimating = false;
+            }, 300);
+        }
+
+        function restart() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            const screen = document.getElementById('result-screen');
+            screen.classList.add('animating');
+            
+            setTimeout(() => {
+                currentQuestion = 0;
+                answers = [];
+                showScreen('welcome-screen');
+                isAnimating = false;
+            }, 300);
+        }
+    </script>
+</body>
+</html>
